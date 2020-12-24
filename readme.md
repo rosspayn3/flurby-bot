@@ -30,5 +30,3 @@ Command	| Arguments | Details
 !commands | (none) | <p>Lists Flurby's available commands.</p><p>But does it list <strong>all</strong> commands? 🤔</p>
 !8ball • | a question | <p>Go ahead. Shake it. You may not like Flurby's answer...</p>
 !gif • | keyword(s) | <p>Flurby gets a random GIF for you using the given keyword(s).</p><p>If no keyword(s) are given, he picks one of his favorites.</p>
-
-[List of commands Flurby knows]
