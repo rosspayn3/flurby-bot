@@ -1,4 +1,4 @@
-# Flurby
+# Flurby v0.9.0
 ## The Best Bot
 Flurby is the best bot and you can't change my mind.
 
