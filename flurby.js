@@ -221,6 +221,10 @@ async function parseCommand(message) {
         case 'playlist':
             songQueue = SERVERS[message.guild.id].songQueue;
 
+            if(!songQueue[0]){
+                message.channel.send("Playlist is empty.");
+                return;
+            }
             for (let i = 0; i < songQueue.length; i++) {
                 message.channel.send(`${i + 1}. ${songQueue[i].title}`)
             }
