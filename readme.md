@@ -30,4 +30,5 @@ Command	| Arguments | Details
 !commands | (none) | <p>Lists Flurby's available commands.</p><p>But does it list <strong>all</strong> commands? 🤔</p>
 !8ball • | a question | <p>Go ahead. Shake it. You may not like Flurby's answer...</p>
 !gif • | keyword(s) | <p>Flurby gets a random GIF for you using the given keyword(s).</p><p>If no keyword(s) are given, he picks one of his favorites.</p>
-!play | YouTube URL | <p>Flurby adds the URL to his playlist, and joins your voice channel to play his playlist. Also works with YouTube Music URLs.</p>
+!play | YouTube URL | <p>Adds the URL to Flurby's playlist. If he's not already playing music, he joins your voice channel to play music. Only one channel can be used at a time. Also works with YouTube Music URLs.</p>
+!playlist | (none) | <p>Shows all songs currently in the server's queue.</p>

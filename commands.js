@@ -11,11 +11,15 @@ const commands = [
     },
     {
         name: "!gif  [optional keyword(s)]",
-        desc: "Flurby gets a random GIF for you."
+        desc: "Flurby gets a random GIF for you. If no keyword is given, he picks a family photo."
     },
     {
         name: "!play  [YouTube URL]",
-        desc: "Flurby adds the URL to his playlist, and joins your voice channel to play his playlist (only one channel can be used). Also works with YouTube Music URLs."
+        desc: "Adds the URL to Flurby's playlist. If he's not already playing music, he joins your voice channel to play music. Only one channel can be used at a time. Also works with YouTube Music URLs."
+    },
+    {
+        name: "!playlist",
+        desc: "Shows all songs currently in the server's queue."
     },
     {
         name: "Coming soon™",
@@ -25,12 +29,12 @@ const commands = [
 
 
 let commandsEmbed = new MessageEmbed()
-                .setTitle("Flurby Info @ rpayne.dev")
-                .setAuthor("Ross Payne", "https://rpayne.dev/img/logo.png")
-                .setDescription("This is a list of commands Flurby can accept. It may change over time.")
-                .setColor(0xE91E63)
-                .setFooter("© Dec 2020 rpayne.dev", "https://rpayne.dev/img/logo.png")
-                .setURL("https://rpayne.dev/projects/flurby/");
+                    .setTitle("Flurby Info @ rpayne.dev")
+                    .setAuthor("Ross Payne", "https://rpayne.dev/img/logo.png")
+                    .setDescription("This is a list of commands Flurby can accept. It may change over time.")
+                    .setColor(0xE91E63)
+                    .setFooter("© Dec 2020 rpayne.dev", "https://rpayne.dev/img/logo.png")
+                    .setURL("https://rpayne.dev/projects/flurby/");
 
 
 commands.forEach(command => {

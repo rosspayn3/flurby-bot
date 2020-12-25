@@ -2,7 +2,7 @@ const { Client } = require('discord.js');
 const env = require('dotenv');
 const path = require('path');
 const fetch = require('node-fetch');
-const ytdl = require('ytdl-core');
+const ytdl = require('ytdl-core-discord');
 
 const { commandsEmbed } = require('./commands');
 const { type } = require('os');
@@ -144,30 +144,15 @@ async function parseCommand(message) {
     switch (command) {
 
         case 'commands':
-
-            // const commandsEmbed = new MessageEmbed()
-            //     .setTitle("Flurby Info @ rpayne.dev")
-            //     .setAuthor(squidzorzUser.username, squidzorzUser.avatarURL())
-            //     .setDescription("This is a list of commands Flurby can accept. It may change over time.")
-            //     .setColor(0xE91E63)
-            //     .setFooter("© Dec 2020 rpayne.dev", "https://rpayne.dev/img/logo.png")
-            //     .setURL("https://rpayne.dev/projects/flurby/")
-            //     .addField("!commands", "This is how you got here!")
-            //     .addField("!8ball  [optional question]", "Shake ye olde 8-ball. You may not like Flurby's answer..." /*,true */)
-            //     .addField("!gif  [optional keyword(s)]", "Flurby gets a random GIF for you.")
-            //     .addField("Coming soon™", "More cool things to come whenever I have free time.");
-
             message.channel.send(commandsEmbed);
             break;
 
         case '8ball':
-
             const answer = get8ballAnswer();
             message.reply(answer);
             break;
 
         case 'gif':
-
             let searchTerm = (paramString.length > 0) ? paramString : 'furby';
             let url = `https://api.tenor.com/v1/search?q=${searchTerm}&key=${process.env.TENOR_KEY}&limit=30&contentfilter=low`;
             let response = await fetch(url);
@@ -184,7 +169,7 @@ async function parseCommand(message) {
                     songQueue: []
                 }
             }
-            
+
             const currentServer = SERVERS[serverID];
             const voiceChannel = message.member.voice.channel;
 
@@ -219,20 +204,26 @@ async function parseCommand(message) {
                 };
                 currentServer.songQueue.push(song);
             } catch (error) {
-                message.channel.send("Something went wrong when I tried to get the URL... Make sure it's a valid URL.");
+                message.channel.send("Something went wrong when I tried to get the URL. Make sure it's valid. Playlist links don't work yet.");
                 console.error(error);
             }
-            
-
-            
 
             // join voice channel and play links until queue is empty
-            if(currentServer.songQueue.length == 1){
-                voiceChannel.join().then( connection => { play(connection, message) })
+            if (currentServer.songQueue.length == 1) {
+                voiceChannel.join().then(connection => { play(connection, message) })
             } else {
                 return;
             }
-            
+
+
+            break;
+
+        case 'playlist':
+            songQueue = SERVERS[message.guild.id].songQueue;
+
+            for (let i = 0; i < songQueue.length; i++) {
+                message.channel.send(`${i + 1}. ${songQueue[i].title}`)
+            }
 
             break;
 
@@ -259,22 +250,23 @@ async function play(connection, message) {
          *      highWaterMark: number of packets to have ready to stream (50 = 1 second of playback)
          */
 
-        const dispatcher = connection
-            .play(ytdl(song.url, { type: "opus", highWaterMark: 100 }))
+        const dispatcher = connection.play(await ytdl(song.url, { highWaterMark: 1 << 25 }), { type: "opus" })
             .on("start", () => {
                 message.channel.send(`Now playing: **[${song.title}]**`);
                 console.log(`Starting playback of [${song.title}]`);
             })
             .on("finish", () => {
+                console.log(`Finished playback of [${song.title}]`);
                 // remove song from queue
                 server.songQueue.shift();
                 // if there are more songs in queue, keep playing. otherwise, disconnect.
-                if(server.songQueue[0]){
+                if (server.songQueue[0]) {
                     play(connection, message);
                 } else {
+                    console.log(`No more songs in queue. Leaving the voice channel.`);
                     connection.disconnect();
                 }
-                
+
             })
             .on("error", error => console.error(error));
 
@@ -282,7 +274,7 @@ async function play(connection, message) {
         console.log("\n\n***** something bad happened when attempting music playback *****\n\n");
         console.log(error);
     }
-    
+
 
     // get next link in server queue and play it
     // server.dispatcher = connection.play( ytdl(server.songQueue[0], { type: "opus", volume: 0.75 }) );
