@@ -52,17 +52,21 @@ client.on('ready', async () => {
 
 
     client.user.setActivity(flurbyGames[3], { type: 'PLAYING' })
-        .then(presence => console.log(`Time to play my favorite game, ${presence.activities[0].name}`
-            + "\n\n*************************************************\n\n"))
+        .then(presence => console.log(
+            "\n*************************************************\n\n"
+            + `Time to play my favorite game, ${presence.activities[0].name}`
+            + "\n\n*************************************************\n"))
         .catch(console.error);
 
     setInterval(() => {
         let game = flurbyGames[Math.floor(Math.random() * flurbyGames.length)];
         client.user.setActivity(game, { type: 'PLAYING' })
-            .then(presence => console.log(`\nTime to play my favorite game, ${presence.activities[0].name}`
+            .then(presence => console.log(
+                "\n*************************************************\n\n"
+                + `Time to play my favorite game, ${presence.activities[0].name}`
                 + "\n\n*************************************************\n"))
             .catch(console.error);
-    }, 1000 * 60 * 5);
+    }, 1000 * 60 * 10);
 
 });
 
@@ -179,9 +183,6 @@ async function parseCommand(message) {
                 SERVERS[serverID] = {
                     songQueue: []
                 }
-                console.log("SERVERS:");
-                console.log(SERVERS);
-                console.log("\n\n\n");
             }
 
             const currentServer = SERVERS[serverID];
@@ -208,21 +209,16 @@ async function parseCommand(message) {
 
             // link user provided
             const link = paramString.trim().split(' ')[0];
-            console.log(`Adding link to play queue: [${link}]\n`);
-            // add link to server queue
-            // currentServer.songQueue.push(link);
-
+            // console.log(`Adding link to play queue: [${link}]\n`);
 
             const songInfo = await ytdl.getInfo(link);
             const song = {
                 title: songInfo.videoDetails.title,
                 url: songInfo.videoDetails.video_url,
             };
+
             currentServer.songQueue.push(song);
 
-            console.log(`Songs in current server queue:`);
-            console.log(currentServer.songQueue);
-            console.log("\n\n");
             // join voice channel and play links until queue is empty
             if(currentServer.songQueue.length == 1){
                 voiceChannel.join().then( connection => { play(connection, message) })
@@ -251,13 +247,16 @@ async function play(connection, message) {
 
         /**
          * Need to figure out how to set volume on stream
+         * 
+         * options for ytdl
+         *      highWaterMark: number of packets to have ready to stream (50 = 1 second of playback)
          */
 
         const dispatcher = connection
-            .play(ytdl(song.url, { type: "opus" }))
+            .play(ytdl(song.url, { type: "opus", highWaterMark: 100 }))
             .on("start", () => {
                 message.channel.send(`Now playing: **[${song.title}]**`);
-                console.log(`Starting playback of [${song.title}]...\n\n`);
+                console.log(`Starting playback of [${song.title}]`);
             })
             .on("finish", () => {
                 // remove song from queue
@@ -273,7 +272,7 @@ async function play(connection, message) {
             .on("error", error => console.error(error));
 
     } catch (error) {
-        console.log("\n\nsomething bad happened\n\n");
+        console.log("\n\n***** something bad happened when attempting music playback *****\n\n");
         console.log(error);
     }
     

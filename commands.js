@@ -15,7 +15,7 @@ const commands = [
     },
     {
         name: "!play  [YouTube URL]",
-        desc: "Flurby joins your voice channel and adds the URL to his playlist. Also works with YouTube Music URLs."
+        desc: "Flurby adds the URL to his playlist, and joins your voice channel to play his playlist (only one channel can be used). Also works with YouTube Music URLs."
     },
     {
         name: "Coming soon™",
