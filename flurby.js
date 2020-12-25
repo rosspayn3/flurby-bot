@@ -1,7 +1,11 @@
-const { Client, MessageEmbed } = require('discord.js');
+const { Client } = require('discord.js');
 const env = require('dotenv');
 const path = require('path');
 const fetch = require('node-fetch');
+const ytdl = require('ytdl-core');
+
+const { commandsEmbed } = require('./commands');
+const { type } = require('os');
 
 
 // Initialization and login
@@ -21,6 +25,7 @@ const flurbyGames = [
     'FFVII Remake 🌟',
     'FFVII ✨'
 ];
+let SERVERS = {};
 
 
 
@@ -43,18 +48,19 @@ const flurbyGames = [
 client.on('ready', async () => {
     console.log('I have arrived! 🎉\n');
     squidzorzUser = (await client.guilds.cache.get(process.env.TEAM_SERVER_ID).members.fetch(process.env.SQUIDZORZ_ID)).user;
-    
+    // console.log(`Squidzorz = ${squidzorzUser}`);
+
 
     client.user.setActivity(flurbyGames[3], { type: 'PLAYING' })
-            .then(presence => console.log(`Time to play my favorite game, ${presence.activities[0].name}`
-                + "\n\n*************************************************\n\n"))
-            .catch(console.error);
+        .then(presence => console.log(`Time to play my favorite game, ${presence.activities[0].name}`
+            + "\n\n*************************************************\n\n"))
+        .catch(console.error);
 
-    setInterval( () => {
-        let game = flurbyGames[ Math.floor(Math.random() * flurbyGames.length) ];
+    setInterval(() => {
+        let game = flurbyGames[Math.floor(Math.random() * flurbyGames.length)];
         client.user.setActivity(game, { type: 'PLAYING' })
-            .then(presence => console.log(`Time to play my favorite game, ${presence.activities[0].name}`
-                + "\n\n*************************************************\n\n"))
+            .then(presence => console.log(`\nTime to play my favorite game, ${presence.activities[0].name}`
+                + "\n\n*************************************************\n"))
             .catch(console.error);
     }, 1000 * 60 * 5);
 
@@ -91,23 +97,23 @@ client.on('guildMemberAdd', member => {
 /**
  * handle new messages
  */
-client.on('message', (msg) => {
+client.on('message', (message) => {
 
     // don't reply to yourself flurby
-    if (msg.author === FLURBY_ID) {
+    if (message.author === FLURBY_ID) {
         return;
     }
 
-    if (msg.content.startsWith(commandPrefix)) {
-        parseCommand(msg);
+    if (message.content.startsWith(commandPrefix)) {
+        parseCommand(message);
     }
-    else if (msg.content.toLowerCase() === "hi flurby" && msg.author !== FLURBY_ID) {
-        msg.react('🎉');
+    else if (message.content.toLowerCase() === "hi flurby" && message.author !== FLURBY_ID) {
+        message.react('🎉');
         let greeting = randomGreeting();
-        msg.channel.send(`${greeting} ${msg.author}! 👋`);
+        message.channel.send(`${greeting} ${message.author}! 👋`);
     }
-    else if (msg.content.toLowerCase() === 'lol' && msg.author !== FLURBY_ID) {
-        replyToMessage(msg, "that wasn't even funny...");
+    else if (message.content.toLowerCase() === 'lol' && message.author !== FLURBY_ID) {
+        replyToMessage(message, "that wasn't even funny...");
     }
 
 });
@@ -115,59 +121,184 @@ client.on('message', (msg) => {
 /**
  * Reply to a message
  */
-function replyToMessage(msg, reply) {
+function replyToMessage(message, reply) {
     // console.log(`Replying to [${msg.author.username}]: ${msg.content}`)
-    msg.reply(reply);
+    message.reply(reply);
 }
 
 /**
  * Parse commands prefixed by "!"
  */
-async function parseCommand(msg) {
+async function parseCommand(message) {
 
-    const args = msg.content.slice(commandPrefix.length).trim().split(' ');
+    const args = message.content.slice(commandPrefix.length).trim().split(' ');
     const command = args.shift().toLowerCase();
     const paramString = args.join(' ');
 
-    console.log(`Command from [${msg.author.username}]: "!${command} ${paramString}"`);
+    console.log(`Command from [${message.author.username}]: "!${command} : ${paramString}"`);
 
     switch (command) {
 
         case 'commands':
-            const commandsEmbed = new MessageEmbed()
-                .setTitle("Flurby Info @ rpayne.dev")
-                .setAuthor(squidzorzUser.username, squidzorzUser.avatarURL())
-                .setDescription("This is a list of commands Flurby can accept. It may change over time.")
-                .setColor(0xE91E63)
-                .setFooter("© Dec 2020 rpayne.dev", "https://rpayne.dev/img/logo.png")
-                .setURL("https://rpayne.dev/projects/flurby/")
-                .addField("!commands", "This is how you got here!")
-                .addField("!8ball  [optional question]", "Shake ye olde 8-ball. You may not like Flurby's answer..." /*,true */)
-                .addField("!gif  [optional keyword(s)]", "Flurby gets a random GIF for you.")
-                .addField("Coming soon™", "More cool things to come whenever I have free time.");
-            msg.channel.send(commandsEmbed);
+
+            // const commandsEmbed = new MessageEmbed()
+            //     .setTitle("Flurby Info @ rpayne.dev")
+            //     .setAuthor(squidzorzUser.username, squidzorzUser.avatarURL())
+            //     .setDescription("This is a list of commands Flurby can accept. It may change over time.")
+            //     .setColor(0xE91E63)
+            //     .setFooter("© Dec 2020 rpayne.dev", "https://rpayne.dev/img/logo.png")
+            //     .setURL("https://rpayne.dev/projects/flurby/")
+            //     .addField("!commands", "This is how you got here!")
+            //     .addField("!8ball  [optional question]", "Shake ye olde 8-ball. You may not like Flurby's answer..." /*,true */)
+            //     .addField("!gif  [optional keyword(s)]", "Flurby gets a random GIF for you.")
+            //     .addField("Coming soon™", "More cool things to come whenever I have free time.");
+
+            message.channel.send(commandsEmbed);
             break;
 
         case '8ball':
+
             const answer = get8ballAnswer();
-            msg.reply(answer);
+            message.reply(answer);
             break;
 
         case 'gif':
+
             let searchTerm = (paramString.length > 0) ? paramString : 'furby';
             let url = `https://api.tenor.com/v1/search?q=${searchTerm}&key=${process.env.TENOR_KEY}&limit=30&contentfilter=low`;
             let response = await fetch(url);
             let json = await response.json();
-            msg.channel.send(json.results[Math.floor(Math.random() * json.results.length)].url);
+            message.channel.send(json.results[Math.floor(Math.random() * json.results.length)].url);
+            break;
+
+        case 'play':
+
+            const serverID = message.guild.id;
+            if (!SERVERS[serverID]) {
+                console.log(`Adding new server to server list [${serverID}]`);
+                SERVERS[serverID] = {
+                    songQueue: []
+                }
+                console.log("SERVERS:");
+                console.log(SERVERS);
+                console.log("\n\n\n");
+            }
+
+            const currentServer = SERVERS[serverID];
+            const voiceChannel = message.member.voice.channel;
+            const permissions = voiceChannel.permissionsFor(message.client.user);
+
+            // did user provide a link to a song
+            if (!paramString.length > 0) {
+                message.reply("I need a link to play music!")
+                return;
+            }
+
+            // is the user in a voice channel
+            if (!voiceChannel) {
+                message.reply("You must be in a voice channel to add a song.");
+                return;
+            }
+
+            // does the bot have permission to connect to voice channel and speak
+            if (!permissions.has("CONNECT") || !permissions.has("SPEAK")) {
+                message.reply("I need the permissions to join and speak in your voice channel!");
+                return;
+            }
+
+            // link user provided
+            const link = paramString.trim().split(' ')[0];
+            console.log(`Adding link to play queue: [${link}]\n`);
+            // add link to server queue
+            // currentServer.songQueue.push(link);
+
+
+            const songInfo = await ytdl.getInfo(link);
+            const song = {
+                title: songInfo.videoDetails.title,
+                url: songInfo.videoDetails.video_url,
+            };
+            currentServer.songQueue.push(song);
+
+            console.log(`Songs in current server queue:`);
+            console.log(currentServer.songQueue);
+            console.log("\n\n");
+            // join voice channel and play links until queue is empty
+            if(currentServer.songQueue.length == 1){
+                voiceChannel.join().then( connection => { play(connection, message) })
+            } else {
+                return;
+            }
+            
+
             break;
 
         default:
+
             console.log(`Invalid command: '!${command}'`);
-            msg.channel.send('Uh. I dunno what you mean. To see available commands use \`!commands\`.');
+            message.channel.send('Uh. I dunno what you mean. To see available commands use \`!commands\`.');
             break;
     }
 
 }
+
+async function play(connection, message) {
+
+    let server = SERVERS[message.guild.id];
+    let song = server.songQueue[0];
+
+    try {
+
+        /**
+         * Need to figure out how to set volume on stream
+         */
+
+        const dispatcher = connection
+            .play(ytdl(song.url, { type: "opus" }))
+            .on("start", () => {
+                message.channel.send(`Now playing: **[${song.title}]**`);
+                console.log(`Starting playback of [${song.title}]...\n\n`);
+            })
+            .on("finish", () => {
+                // remove song from queue
+                server.songQueue.shift();
+                // if there are more songs in queue, keep playing. otherwise, disconnect.
+                if(server.songQueue[0]){
+                    play(connection, message);
+                } else {
+                    connection.disconnect();
+                }
+                
+            })
+            .on("error", error => console.error(error));
+
+    } catch (error) {
+        console.log("\n\nsomething bad happened\n\n");
+        console.log(error);
+    }
+    
+
+    // get next link in server queue and play it
+    // server.dispatcher = connection.play( ytdl(server.songQueue[0], { type: "opus", volume: 0.75 }) );
+
+    // server.dispatcher.on("start", () => {
+    //     console.log(`Now playing [${server.songQueue[0]}]`);
+    // })
+
+    // remove song from queue
+    // server.songQueue.shift();
+
+    // on end of stream, play next link in queue, or disconnect if no more links
+    // server.dispatcher.on("end", () => {
+    //     if(server.songQueue[0]){
+    //         play(connection, message);
+    //     } else {
+    //         connection.disconnect();
+    //     }
+    // });
+
+}
+
 
 /**
  * Return a random awesome greeting

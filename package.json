@@ -9,8 +9,15 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@discordjs/opus": "github:discordjs/opus",
     "discord.js": "^12.5.1",
     "dotenv": "^8.2.0",
-    "node-fetch": "^2.6.1"
+    "ffmpeg": "0.0.4",
+    "ffmpeg-static": "^4.2.7",
+    "fluent-ffmpeg": "^2.1.2",
+    "node-fetch": "^2.6.1",
+    "opusscript": "0.0.7",
+    "ytdl-core": "^4.2.1",
+    "ytdl-core-discord": "^1.2.5"
   }
 }
