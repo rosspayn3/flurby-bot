@@ -12,8 +12,8 @@ const { type } = require('os');
 
 env.config({ path: path.resolve(__dirname, 'flurby.env') });
 console.log("\nI'M ALIVE!! 🤖\n");
-const client = new Client({ partials: ['MESSAGE', 'CHANNEL', 'REACTION'] });
-client.login(process.env.FLURBY_BOT_TOKEN);
+const flurbyClient = new Client({ partials: ['MESSAGE', 'CHANNEL', 'REACTION'] });
+flurbyClient.login(process.env.FLURBY_BOT_TOKEN);
 
 const FLURBY_ID = process.env.FLURBY_ID;
 let squidzorzUser = null;
@@ -45,13 +45,13 @@ let SERVERS = {};
 /**
  * Things to do when Flurby logs in
  */
-client.on('ready', async () => {
+flurbyClient.on('ready', async () => {
     console.log('I have arrived! 🎉\n');
-    squidzorzUser = (await client.guilds.cache.get(process.env.TEAM_SERVER_ID).members.fetch(process.env.SQUIDZORZ_ID)).user;
+    squidzorzUser = (await flurbyClient.guilds.cache.get(process.env.TEAM_SERVER_ID).members.fetch(process.env.SQUIDZORZ_ID)).user;
     // console.log(`Squidzorz = ${squidzorzUser}`);
 
 
-    client.user.setActivity(flurbyGames[3], { type: 'PLAYING' })
+    flurbyClient.user.setActivity(flurbyGames[3], { type: 'PLAYING' })
         .then(presence => console.log(
             "\n*************************************************\n\n"
             + `Time to play my favorite game, ${presence.activities[0].name}`
@@ -60,7 +60,7 @@ client.on('ready', async () => {
 
     setInterval(() => {
         let game = flurbyGames[Math.floor(Math.random() * flurbyGames.length)];
-        client.user.setActivity(game, { type: 'PLAYING' })
+        flurbyClient.user.setActivity(game, { type: 'PLAYING' })
             .then(presence => console.log(
                 "\n*************************************************\n\n"
                 + `Time to play my favorite game, ${presence.activities[0].name}`
@@ -81,7 +81,7 @@ client.on('ready', async () => {
 /**
  * listen for new members
  */
-client.on('guildMemberAdd', member => {
+flurbyClient.on('guildMemberAdd', member => {
     // Send the message to a designated channel on a server:
     const channel = member.guild.channels.cache.get('713225750618308639');
     // Do nothing if the channel wasn't found on this server
@@ -101,7 +101,7 @@ client.on('guildMemberAdd', member => {
 /**
  * handle new messages
  */
-client.on('message', (message) => {
+flurbyClient.on('message', (message) => {
 
     // don't reply to yourself flurby
     if (message.author === FLURBY_ID) {
@@ -184,10 +184,9 @@ async function parseCommand(message) {
                     songQueue: []
                 }
             }
-
+            
             const currentServer = SERVERS[serverID];
             const voiceChannel = message.member.voice.channel;
-            const permissions = voiceChannel.permissionsFor(message.client.user);
 
             // did user provide a link to a song
             if (!paramString.length > 0) {
@@ -201,6 +200,7 @@ async function parseCommand(message) {
                 return;
             }
 
+            const permissions = voiceChannel.permissionsFor(flurbyClient.user);
             // does the bot have permission to connect to voice channel and speak
             if (!permissions.has("CONNECT") || !permissions.has("SPEAK")) {
                 message.reply("I need the permissions to join and speak in your voice channel!");
@@ -211,13 +211,20 @@ async function parseCommand(message) {
             const link = paramString.trim().split(' ')[0];
             // console.log(`Adding link to play queue: [${link}]\n`);
 
-            const songInfo = await ytdl.getInfo(link);
-            const song = {
-                title: songInfo.videoDetails.title,
-                url: songInfo.videoDetails.video_url,
-            };
+            try {
+                const songInfo = await ytdl.getInfo(link);
+                const song = {
+                    title: songInfo.videoDetails.title,
+                    url: songInfo.videoDetails.video_url,
+                };
+                currentServer.songQueue.push(song);
+            } catch (error) {
+                message.channel.send("Something went wrong when I tried to get the URL... Make sure it's a valid URL.");
+                console.error(error);
+            }
+            
 
-            currentServer.songQueue.push(song);
+            
 
             // join voice channel and play links until queue is empty
             if(currentServer.songQueue.length == 1){
@@ -371,7 +378,7 @@ function get8ballAnswer() {
 /**
  * Handle new reactions
  */
-client.on('messageReactionAdd', async (reaction, user) => {
+flurbyClient.on('messageReactionAdd', async (reaction, user) => {
 
     if (reaction.partial || reaction.message.partial) {
         console.log("Fetching reaction and its message...");
@@ -446,7 +453,7 @@ function addMemberRole(reaction, user) {
 /**
  * Handle removed reactions
  */
-client.on('messageReactionRemove', async (reaction, user) => {
+flurbyClient.on('messageReactionRemove', async (reaction, user) => {
 
     if (reaction.partial || reaction.message.partial) {
         await reaction.fetch();
