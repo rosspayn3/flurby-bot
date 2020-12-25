@@ -14,6 +14,10 @@ const commands = [
         desc: "Flurby gets a random GIF for you."
     },
     {
+        name: "!play  [YouTube URL]",
+        desc: "Flurby joins your voice channel and adds the URL to his playlist. Also works with YouTube Music URLs."
+    },
+    {
         name: "Coming soon™",
         desc: "More cool things to come whenever I have free time."
     }

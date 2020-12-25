@@ -23,10 +23,11 @@ Flurby is the best bot and you can't change my mind.
 
 
 <a name="commands"></a>
-### Commands
+### Commands (• denotes optional arguments)
 
 Command	| Arguments | Details
 ---|---|----
 !commands | (none) | <p>Lists Flurby's available commands.</p><p>But does it list <strong>all</strong> commands? 🤔</p>
 !8ball • | a question | <p>Go ahead. Shake it. You may not like Flurby's answer...</p>
 !gif • | keyword(s) | <p>Flurby gets a random GIF for you using the given keyword(s).</p><p>If no keyword(s) are given, he picks one of his favorites.</p>
+!play | YouTube URL | <p>Flurby adds the URL to his playlist, and joins your voice channel to play his playlist. Also works with YouTube Music URLs.</p>
