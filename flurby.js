@@ -219,14 +219,21 @@ async function parseCommand(message) {
             break;
 
         case 'playlist':
-            songQueue = SERVERS[message.guild.id].songQueue;
 
-            if(!songQueue[0]){
+            if(!SERVERS[message.guild.id]){
                 message.channel.send("Playlist is empty.");
                 return;
             }
+
+            songQueue = SERVERS[message.guild.id].songQueue;
+
+            if(!songQueue || !songQueue[0]){
+                message.channel.send("Playlist is empty.");
+                return;
+            }
+
             for (let i = 0; i < songQueue.length; i++) {
-                message.channel.send(`${i + 1}. ${songQueue[i].title}`)
+                message.channel.send(`${i + 1}.  ${songQueue[i].title}`)
             }
 
             break;
@@ -234,7 +241,7 @@ async function parseCommand(message) {
         default:
 
             console.log(`Invalid command: '!${command}'`);
-            message.channel.send('Uh. I dunno what you mean. To see available commands use \`!commands\`.');
+            message.channel.send("Uh. I dunno what you mean. To see available commands use \`!commands\`.");
             break;
     }
 
