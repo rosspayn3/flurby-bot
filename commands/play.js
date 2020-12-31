@@ -52,8 +52,8 @@ module.exports = {
                     url: songInfo.videoDetails.video_url,
                 };
                 // console.log(`Adding song to queue: [${song.title}]\n`);
-                message.channel.send(`Adding song to queue: **[${song.title}]**`);
                 currentServer.songQueue.push(song);
+                message.channel.send(`Added song to queue: **[${song.title}]**`);
             } catch (error) {
                 message.channel.send("Something went wrong when I tried to get the URL. Make sure it's valid. Playlist links don't work yet.");
                 console.error(error);
