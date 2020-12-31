@@ -1,23 +1,35 @@
-const { Client } = require('discord.js');
-const env = require('dotenv');
-const path = require('path');
-const fetch = require('node-fetch');
-const ytdl = require('ytdl-core-discord');
+const { Client, Collection } = require('discord.js');
+const fs = require('fs');
+const config = require('./config');
+const { greet } = require('./greet');
 
-const { commandsEmbed } = require('./commands');
-const { type } = require('os');
+
+// instantiate Flurby client
+
+const client = new Client({ partials: ['MESSAGE', 'CHANNEL', 'REACTION'] });
+
+// register all commands with client
+
+client.commands = new Collection();
+
+const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+console.log(`\nRegistering commands in client...`);
+commandFiles.forEach(file => {
+    const command = require(`./commands/${file}`);
+    client.commands.set(command.name, command);
+    console.log(`Registered command [${command.name}].`);
+})
+console.log(`Finished.`);
+
+// object for storing song queue for servers
+
+client.SERVERS = {};
 
 
 // Initialization and login
 
-env.config({ path: path.resolve(__dirname, 'flurby.env') });
-console.log("\nI'M ALIVE!! 🤖\n");
-const flurbyClient = new Client({ partials: ['MESSAGE', 'CHANNEL', 'REACTION'] });
-flurbyClient.login(process.env.FLURBY_BOT_TOKEN);
-
-const FLURBY_ID = process.env.FLURBY_ID;
 let squidzorzUser = null;
-const commandPrefix = "!";
+const commandPrefix = config.PREFIX;
 const flurbyGames = [
     'Flurbyville 🌾',
     'Cyberpunk 2077 🤖',
@@ -25,13 +37,8 @@ const flurbyGames = [
     'FFVII Remake 🌟',
     'FFVII ✨'
 ];
-let SERVERS = {};
 
-
-
-
-
-
+client.login(config.FLURBY_BOT_TOKEN);
 
 
 /*******************************************************************************/
@@ -45,27 +52,16 @@ let SERVERS = {};
 /**
  * Things to do when Flurby logs in
  */
-flurbyClient.on('ready', async () => {
-    console.log('I have arrived! 🎉\n');
-    squidzorzUser = (await flurbyClient.guilds.cache.get(process.env.TEAM_SERVER_ID).members.fetch(process.env.SQUIDZORZ_ID)).user;
-    // console.log(`Squidzorz = ${squidzorzUser}`);
+client.on('ready', async () => {
+    console.log('\nI have logged in! 🎉\n');
+    squidzorzUser = (await client.guilds.cache.get(config.TEAM_SERVER_ID).members.fetch(config.SQUIDZORZ_ID)).user;
+    client.user.setActivity(flurbyGames[3], { type: 'PLAYING' }).catch(console.error);
 
-
-    flurbyClient.user.setActivity(flurbyGames[3], { type: 'PLAYING' })
-        .then(presence => console.log(
-            "\n*************************************************\n\n"
-            + `Time to play my favorite game, ${presence.activities[0].name}`
-            + "\n\n*************************************************\n"))
-        .catch(console.error);
-
+    // Flurby might get bored playing the same game all the time.
+    // Every 10 minutes, he starts playing something else from his games list.
     setInterval(() => {
         let game = flurbyGames[Math.floor(Math.random() * flurbyGames.length)];
-        flurbyClient.user.setActivity(game, { type: 'PLAYING' })
-            .then(presence => console.log(
-                "\n*************************************************\n\n"
-                + `Time to play my favorite game, ${presence.activities[0].name}`
-                + "\n\n*************************************************\n"))
-            .catch(console.error);
+        client.user.setActivity(game, { type: 'PLAYING' }).catch(console.error);
     }, 1000 * 60 * 10);
 
 });
@@ -81,7 +77,7 @@ flurbyClient.on('ready', async () => {
 /**
  * listen for new members
  */
-flurbyClient.on('guildMemberAdd', member => {
+client.on('guildMemberAdd', member => {
     // Send the message to a designated channel on a server:
     const channel = member.guild.channels.cache.get('713225750618308639');
     // Do nothing if the channel wasn't found on this server
@@ -97,276 +93,75 @@ flurbyClient.on('guildMemberAdd', member => {
 
 
 
-
 /**
  * handle new messages
  */
-flurbyClient.on('message', (message) => {
+client.on('message', (message) => {
 
-    // don't reply to yourself flurby
-    if (message.author === FLURBY_ID) {
+    // don't respond to Flurby or other bot messages.
+    if (message.author.bot) {
         return;
     }
 
     if (message.content.startsWith(commandPrefix)) {
         parseCommand(message);
     }
-    else if (message.content.toLowerCase() === "hi flurby" && message.author !== FLURBY_ID) {
+    else if (message.content.toLowerCase() === "hi flurby") {
         message.react('🎉');
-        let greeting = randomGreeting();
-        message.channel.send(`${greeting} ${message.author}! 👋`);
+        greet(message);
     }
-    else if (message.content.toLowerCase() === 'lol' && message.author !== FLURBY_ID) {
-        replyToMessage(message, "that wasn't even funny...");
+    else if (message.content.toLowerCase() === 'lol') {
+        message.reply("That wasn't even funny...");
     }
 
 });
 
 /**
- * Reply to a message
- */
-function replyToMessage(message, reply) {
-    // console.log(`Replying to [${msg.author.username}]: ${msg.content}`)
-    message.reply(reply);
-}
-
-/**
- * Parse commands prefixed by "!"
+ * Parse commands
  */
 async function parseCommand(message) {
 
-    const args = message.content.slice(commandPrefix.length).trim().split(' ');
-    const command = args.shift().toLowerCase();
-    const paramString = args.join(' ');
+    // remove prefix, trim whitespace, split on one or more spaces
+    const args = message.content.slice(commandPrefix.length).trim().split(/ +/);
+    const commandName = args.shift().toLowerCase();
+    const paramString = args.join(" ");
 
-    console.log(`Command from [${message.author.username}]: "!${command} : ${paramString}"`);
+    console.log(`[${message.author.tag}]:  command: "${commandPrefix}${commandName}"   arguments: "${paramString}"`);
 
-    switch (command) {
-
-        case 'commands':
-            message.channel.send(commandsEmbed);
-            break;
-
-        case '8ball':
-            const answer = get8ballAnswer();
-            message.reply(answer);
-            break;
-
-        case 'gif':
-            let searchTerm = (paramString.length > 0) ? paramString : 'furby';
-            let url = `https://api.tenor.com/v1/search?q=${searchTerm}&key=${process.env.TENOR_KEY}&limit=30&contentfilter=low`;
-            let response = await fetch(url);
-            let json = await response.json();
-            message.channel.send(json.results[Math.floor(Math.random() * json.results.length)].url);
-            break;
-
-        case 'play':
-
-            const serverID = message.guild.id;
-            if (!SERVERS[serverID]) {
-                console.log(`Adding new server to server list [${serverID}]`);
-                SERVERS[serverID] = {
-                    songQueue: []
-                }
-            }
-
-            const currentServer = SERVERS[serverID];
-            const voiceChannel = message.member.voice.channel;
-
-            // did user provide a link to a song
-            if (!paramString.length > 0) {
-                message.reply("I need a link to play music!")
-                return;
-            }
-
-            // is the user in a voice channel
-            if (!voiceChannel) {
-                message.reply("You must be in a voice channel to add a song.");
-                return;
-            }
-
-            const permissions = voiceChannel.permissionsFor(flurbyClient.user);
-            // does the bot have permission to connect to voice channel and speak
-            if (!permissions.has("CONNECT") || !permissions.has("SPEAK")) {
-                message.reply("I need the permissions to join and speak in your voice channel!");
-                return;
-            }
-
-            // link user provided
-            const link = paramString.trim().split(' ')[0];
-            // console.log(`Adding link to play queue: [${link}]\n`);
-
-            try {
-                const songInfo = await ytdl.getInfo(link);
-                const song = {
-                    title: songInfo.videoDetails.title,
-                    url: songInfo.videoDetails.video_url,
-                };
-                currentServer.songQueue.push(song);
-            } catch (error) {
-                message.channel.send("Something went wrong when I tried to get the URL. Make sure it's valid. Playlist links don't work yet.");
-                console.error(error);
-            }
-
-            // join voice channel and play links until queue is empty
-            if (currentServer.songQueue.length == 1) {
-                voiceChannel.join().then(connection => { play(connection, message) })
-            } else {
-                return;
-            }
-
-
-            break;
-
-        case 'playlist':
-
-            if(!SERVERS[message.guild.id]){
-                message.channel.send("Playlist is empty.");
-                return;
-            }
-
-            songQueue = SERVERS[message.guild.id].songQueue;
-
-            if(!songQueue || !songQueue[0]){
-                message.channel.send("Playlist is empty.");
-                return;
-            }
-
-            for (let i = 0; i < songQueue.length; i++) {
-                message.channel.send(`${i + 1}.  ${songQueue[i].title}`)
-            }
-
-            break;
-
-        default:
-
-            console.log(`Invalid command: '!${command}'`);
-            message.channel.send("Uh. I dunno what you mean. To see available commands use \`!commands\`.");
-            break;
+    if(!client.commands.has(commandName)){
+        console.error(`Unknown command : ${commandPrefix}${commandName}`);
+        return message.channel.send("Wups. Unknown command. To see available commands use \`!commands\`.")
     }
 
-}
+    const command = client.commands.get(commandName);
 
-async function play(connection, message) {
+    if (command.guildOnly && message.channel.type === 'dm') {
+        return message.reply("I can't execute that command inside DMs!");
+    }
 
-    let server = SERVERS[message.guild.id];
-    let song = server.songQueue[0];
+    if (command.permissions) {
+        const authorPerms = message.channel.permissionsFor(message.client.user);
+        if (!authorPerms || !authorPerms.has(command.permissions)) {
+            return message.reply("You don't have the necessary permissions do that! Contact a server admin to get permissions.");
+        }
+    }
+
+    if(command.args && !args.length){
+        let reply = `You must provide one or more arguments for this command.`;
+
+        if(command.arguments){
+            reply += `\nCorrect usage is: \`${commandPrefix}${command.name} ${command.arguments}\``;
+        }
+
+        return message.reply(reply);
+    }
 
     try {
-
-        /**
-         * Need to figure out how to set volume on stream
-         * 
-         * options for ytdl
-         *      highWaterMark: number of packets to have ready to stream (50 = 1 second of playback)
-         */
-
-        const dispatcher = connection.play(await ytdl(song.url, { highWaterMark: 1 << 25 }), { type: "opus" })
-            .on("start", () => {
-                message.channel.send(`Now playing: **[${song.title}]**`);
-                console.log(`Starting playback of [${song.title}]`);
-            })
-            .on("finish", () => {
-                console.log(`Finished playback of [${song.title}]`);
-                // remove song from queue
-                server.songQueue.shift();
-                // if there are more songs in queue, keep playing. otherwise, disconnect.
-                if (server.songQueue[0]) {
-                    play(connection, message);
-                } else {
-                    console.log(`No more songs in queue. Leaving the voice channel.`);
-                    connection.disconnect();
-                }
-
-            })
-            .on("error", error => console.error(error));
-
+        command.execute(message, args);
     } catch (error) {
-        console.log("\n\n***** something bad happened when attempting music playback *****\n\n");
-        console.log(error);
+        console.error(error);
+        message.reply("Something went wrong executing that command...");
     }
-
-
-    // get next link in server queue and play it
-    // server.dispatcher = connection.play( ytdl(server.songQueue[0], { type: "opus", volume: 0.75 }) );
-
-    // server.dispatcher.on("start", () => {
-    //     console.log(`Now playing [${server.songQueue[0]}]`);
-    // })
-
-    // remove song from queue
-    // server.songQueue.shift();
-
-    // on end of stream, play next link in queue, or disconnect if no more links
-    // server.dispatcher.on("end", () => {
-    //     if(server.songQueue[0]){
-    //         play(connection, message);
-    //     } else {
-    //         connection.disconnect();
-    //     }
-    // });
-
-}
-
-
-/**
- * Return a random awesome greeting
- */
-function randomGreeting() {
-
-    const greetings = [
-        "Hello there",
-        "Wassaaaaaaaaaaaaaaap",
-        "What's goin on",
-        "Allo",
-        "Ayeeee",
-        "Yo",
-        "Sup",
-        "HeyYyYyYy 😉 ",
-        "What's crackin",
-        "Ahoy there",
-        "Howdy",
-        "Que pasa",
-        "Bonjour",
-        "Konnichiwa",
-        "Hai"
-    ];
-
-    const index = Math.floor(Math.random() * greetings.length);
-    return greetings[index];
-
-}
-
-/**
- * Return a magic 8-ball answer
- */
-function get8ballAnswer() {
-
-    const answers = [
-        "As I see it, yes.",
-        "Ask again later.",
-        "Better not tell you now.",
-        "Cannot predict now.",
-        "Concentrate and ask again.",
-        "Don’t count on it.",
-        "It is certain.",
-        "It is decidedly so.",
-        "Most likely.",
-        "My reply is no.",
-        "My sources say no.",
-        "Outlook not so good.",
-        "Outlook good.",
-        "Reply hazy, try again.",
-        "Signs point to yes.",
-        "Very doubtful.",
-        "Without a doubt.",
-        "Yes.",
-        "Yes – definitely.",
-        "You may rely on it."
-    ];
-
-    const index = Math.floor(Math.random() * answers.length);
-    return answers[index];
 
 }
 
@@ -381,7 +176,7 @@ function get8ballAnswer() {
 /**
  * Handle new reactions
  */
-flurbyClient.on('messageReactionAdd', async (reaction, user) => {
+client.on('messageReactionAdd', async (reaction, user) => {
 
     if (reaction.partial || reaction.message.partial) {
         console.log("Fetching reaction and its message...");
@@ -456,7 +251,7 @@ function addMemberRole(reaction, user) {
 /**
  * Handle removed reactions
  */
-flurbyClient.on('messageReactionRemove', async (reaction, user) => {
+client.on('messageReactionRemove', async (reaction, user) => {
 
     if (reaction.partial || reaction.message.partial) {
         await reaction.fetch();
