@@ -12,12 +12,12 @@ const client = new Client({ partials: ['MESSAGE', 'CHANNEL', 'REACTION'] });
 
 client.commands = new Collection();
 
-const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+const commandFiles = fs.readdirSync(__dirname + '/commands').filter(file => file.endsWith('.js'));
 console.log(`\nRegistering commands in client...`);
 commandFiles.forEach(file => {
     const command = require(`./commands/${file}`);
     client.commands.set(command.name, command);
-    console.log(`Registered command [${command.name}].`);
+    console.log(`Registered command [${command.name}]`);
 })
 console.log(`Finished.`);
 

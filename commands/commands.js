@@ -1,6 +1,7 @@
 const { MessageEmbed } = require('discord.js');
+const path = require('path');
 const fs = require('fs');
-const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+const commandFiles = fs.readdirSync(__dirname).filter(file => file.endsWith('.js'));
 
 // don't add this file so it can be manually added as first command
 // also throws error when trying to add itself so that's bad
