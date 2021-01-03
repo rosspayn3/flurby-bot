@@ -18,17 +18,19 @@ client.commands = new Collection();
 const commandFiles = fs.readdirSync(__dirname + '/commands').filter(file => file.endsWith('.js'));
 console.log('\n');
 logger.info(`Registering commands in client...`);
+logger.info(`[commands.js] will fail to load if any other modules have errors.`);
 commandFiles.forEach(file => {
+    const commandName = file;
     try {
         const command = require(`./commands/${file}`);
         client.commands.set(command.name, command);
         logger.success(`Registered command [${command.name}]`);
-        sleep(200);
+        sleep(100);
     } catch (error) {
-        logger.error(error);
+        logger.error(`Error loading command [${commandName}]: ${error}`);
     }  
 })
-logger.info(`Finished.\n____________________________________________________________\n`);
+logger.info(`Finished.\n_______________________________________________________________\n`);
 
 // object for storing song queue for servers
 
@@ -133,7 +135,6 @@ async function parseCommand(message) {
     // remove prefix, trim whitespace, split on one or more spaces
     const args = message.content.slice(commandPrefix.length).trim().split(/ +/);
     const commandName = args.shift().toLowerCase();
-    const paramString = args.join(" ");
 
     // console.log(`[${message.author.tag}]:  command: "${commandPrefix}${commandName}"   arguments: "${paramString}"`);
 
@@ -166,6 +167,8 @@ async function parseCommand(message) {
     }
 
     try {
+        // message = the original message that can be used to reply and get server/channel/etc
+        // args = array of parameters
         command.execute(message, args);
     } catch (error) {
         logger.error(error);
