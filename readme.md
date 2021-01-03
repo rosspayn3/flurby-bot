@@ -29,7 +29,7 @@ I'll continue to add more as I learn about the Discord API and webhooks.
 <a name="commands"></a>
 ## Commands
 
-Command	| Arguments | Details
+| Command	| Arguments | Details |
 :---|:---|:---
 !commands | (none) | Lists Flurby's available commands.
 !8ball | <p>(optional)</p>a question | Go ahead. Shake it. You may not like Flurby's answer...
@@ -37,3 +37,6 @@ Command	| Arguments | Details
 !play | <p>YouTube URL</p><p>YouTube Music URL</p> | <p>Adds the URL to Flurby's playlist.</p><p>If he's not already playing music, he joins your voice channel to play music. Only one channel can be used at a time.</p>
 !playlist | (none) | Shows all songs currently in the server's queue.
 !roll | <p>(optional)</p><p>max range</p><p># of dice</p> | Rolls a number between 1-100 by default. If a number X is given, the roll will be up to and including that number (1 - X). Number of dice can also be specified as a second parameter.
+
+
+<sub>https://rpayne.dev</sub>
