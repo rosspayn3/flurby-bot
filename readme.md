@@ -1,10 +1,9 @@
-# Flurby v0.9.0 - The Best Bot
+# Flurby v0.9.0 - The Best Bot <!-- omit in toc -->
 
 ## Table of Contents <!-- omit in toc -->
-- [Flurby v0.9.0 - The Best Bot](#flurby-v090---the-best-bot)
-  - [Introduction](#introduction)
-  - [Features](#features)
-  - [Commands](#commands)
+- [Introduction](#introduction)
+- [Features](#features)
+- [Commands](#commands)
 
 
 <a name="intro"></a>
