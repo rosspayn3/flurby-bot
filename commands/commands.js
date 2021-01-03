@@ -22,7 +22,15 @@ let commandsEmbed = new MessageEmbed()
 commandFiles.forEach(file => {
     const c = require(`./${file}`);
     if( c.name && !c.name.startsWith("commands") && !c.name.startsWith("reload")){
-        commandsEmbed.addField("!" + c.name, c.description);
+        if(c.hasOwnProperty('arguments')){
+            if(c.args){
+                commandsEmbed.addField(`!${c.name} ${c.arguments}`, c.description);
+            } else {
+                commandsEmbed.addField(`!${c.name} ${c.arguments} (optional)`, c.description);
+            }
+        } else {
+            commandsEmbed.addField(`!${c.name}`, c.description);
+        }
     }
 })
 

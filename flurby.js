@@ -2,24 +2,33 @@ const { Client, Collection } = require('discord.js');
 const fs = require('fs');
 const config = require('./config');
 const { greet } = require('./greet');
+const Logger = require('./utils/logger');
+const { sleep } = require('./utils/sleep');
 
 
 // instantiate Flurby client
 
 const client = new Client({ partials: ['MESSAGE', 'CHANNEL', 'REACTION'] });
+const logger = new Logger();
 
 // register all commands with client
 
 client.commands = new Collection();
 
 const commandFiles = fs.readdirSync(__dirname + '/commands').filter(file => file.endsWith('.js'));
-console.log(`\nRegistering commands in client...`);
+console.log('\n');
+logger.info(`Registering commands in client...`);
 commandFiles.forEach(file => {
-    const command = require(`./commands/${file}`);
-    client.commands.set(command.name, command);
-    console.log(`Registered command [${command.name}]`);
+    try {
+        const command = require(`./commands/${file}`);
+        client.commands.set(command.name, command);
+        logger.success(`Registered command [${command.name}]`);
+        sleep(200);
+    } catch (error) {
+        logger.error(error);
+    }  
 })
-console.log(`Finished.`);
+logger.info(`Finished.\n____________________________________________________________\n`);
 
 // object for storing song queue for servers
 
@@ -53,15 +62,16 @@ client.login(config.FLURBY_BOT_TOKEN);
  * Things to do when Flurby logs in
  */
 client.on('ready', async () => {
-    console.log('\nI have logged in! 🎉\n');
+    logger.success('I have logged in! 🎉');
     squidzorzUser = (await client.guilds.cache.get(config.TEAM_SERVER_ID).members.fetch(config.SQUIDZORZ_ID)).user;
-    client.user.setActivity(flurbyGames[3], { type: 'PLAYING' }).catch(console.error);
-
+    client.user.setActivity(flurbyGames[3], { type: 'PLAYING' }).catch(err => logger.error(err));
+    logger.error("Here's a test error. Don't worry, everything's fine!")
+    logger.warning("Warning!!!");
     // Flurby might get bored playing the same game all the time.
     // Every 10 minutes, he starts playing something else from his games list.
     setInterval(() => {
         let game = flurbyGames[Math.floor(Math.random() * flurbyGames.length)];
-        client.user.setActivity(game, { type: 'PLAYING' }).catch(console.error);
+        client.user.setActivity(game, { type: 'PLAYING' }).catch(err => logger.error(err));
     }, 1000 * 60 * 10);
 
 });
@@ -126,10 +136,10 @@ async function parseCommand(message) {
     const commandName = args.shift().toLowerCase();
     const paramString = args.join(" ");
 
-    console.log(`[${message.author.tag}]:  command: "${commandPrefix}${commandName}"   arguments: "${paramString}"`);
+    // console.log(`[${message.author.tag}]:  command: "${commandPrefix}${commandName}"   arguments: "${paramString}"`);
 
     if(!client.commands.has(commandName)){
-        console.error(`Unknown command : ${commandPrefix}${commandName}`);
+        logger.error(`Unknown command : ${commandPrefix}${commandName}`);
         return message.channel.send("Wups. Unknown command. To see available commands use \`!commands\`.")
     }
 
@@ -159,7 +169,7 @@ async function parseCommand(message) {
     try {
         command.execute(message, args);
     } catch (error) {
-        console.error(error);
+        logger.error(error);
         message.reply("Something went wrong executing that command...");
     }
 
@@ -179,7 +189,7 @@ async function parseCommand(message) {
 client.on('messageReactionAdd', async (reaction, user) => {
 
     if (reaction.partial || reaction.message.partial) {
-        console.log("Fetching reaction and its message...");
+        logger.info("Partial reaciton or message. Fetching...");
         await reaction.fetch();
         await reaction.message.fetch();
     }
@@ -204,8 +214,8 @@ function pinMessage(reaction, user) {
 
         if (member.hasPermission('MANAGE_MESSAGES')) {
             message.pin()
-                .then(console.log(`[${member.user.username}] pinned message from [${message.author.username}] in channel [${message.channel.name}]`))
-                .catch(console.error);
+                .then(logger.info(`[${member.user.username}] pinned message from [${message.author.username}] in channel [${message.channel.name}]`))
+                .catch(err => logger.error(err));
         }
 
     }
@@ -274,8 +284,8 @@ function unpinMessage(reaction, user) {
 
         if (member.hasPermission('MANAGE_MESSAGES')) {
             message.unpin()
-                .then(console.log(`[${member.user.username}] unpinned message from [${message.author.username}] in channel [${message.channel.name}]`))
-                .catch(console.error);
+                .then(logger.info(`[${member.user.username}] unpinned message from [${message.author.username}] in channel [${message.channel.name}]`))
+                .catch(err => logger.error(err));
         }
 
     }
