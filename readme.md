@@ -22,6 +22,7 @@ Flurby has a small set of features at the moment.
 - Give magic 8-ball answers
 - Fetch GIFs according to keyword(s) using the Tenor API
 - Maintain a music playlist for playback in voice channels when users provide YouTube/YouTube Music URLs
+- Roll dice in a given range a given number of times
   
 I'll continue to add more as I learn about the Discord API and webhooks.
 
