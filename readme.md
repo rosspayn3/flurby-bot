@@ -40,4 +40,4 @@ I'll continue to add more as I learn about the Discord API and webhooks.
 !roll | <p>(optional)</p><p>max range</p><p># of dice</p> | Rolls a number between 1-100 by default. If a number X is given, the roll will be up to and including that number (1 - X). Number of dice can also be specified as a second parameter.
 
 
-https://rpayne.dev
+https://rpayne.dev/projects/flurby/
