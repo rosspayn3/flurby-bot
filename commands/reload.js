@@ -1,3 +1,6 @@
+const Logger = require('../utils/logger');
+const logger = new Logger();
+
 module.exports = {
 	name: 'reload',
 	description: 'Reloads a command',
@@ -15,10 +18,10 @@ module.exports = {
             const newCommand = require(`./${command.name}.js`);
             message.client.commands.set(newCommand.name, newCommand);
             message.channel.send(`Successfully reloaded command \`${newCommand.name}\``)
-            console.log(`Successfully reloaded command '${newCommand.name}'`);
+            logger.success(`Successfully reloaded command '${newCommand.name}'`);
         } catch (error) {
-            console.error(error);
             message.channel.send(`Something bad happened while reloading the command \`${command.name}\`:\n\`${error.message}\``);
+            logger.error(error);
         }
 	}
 };
