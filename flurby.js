@@ -65,8 +65,7 @@ client.on('ready', async () => {
     logger.success('I have logged in! 🎉');
     squidzorzUser = (await client.guilds.cache.get(config.TEAM_SERVER_ID).members.fetch(config.SQUIDZORZ_ID)).user;
     client.user.setActivity(flurbyGames[3], { type: 'PLAYING' }).catch(err => logger.error(err));
-    logger.error("Here's a test error. Don't worry, everything's fine!")
-    logger.warning("Warning!!!");
+    
     // Flurby might get bored playing the same game all the time.
     // Every 10 minutes, he starts playing something else from his games list.
     setInterval(() => {
