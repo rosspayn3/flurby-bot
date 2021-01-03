@@ -37,3 +37,4 @@ Command	| Arguments | Details
 !gif | <p>(optional)</p>keyword(s) | Flurby gets a random GIF for you using the given keyword(s). If no keyword(s) are given, he picks one of his favorites.
 !play | <p>YouTube URL</p><p>YouTube Music URL</p> | <p>Adds the URL to Flurby's playlist.</p><p>If he's not already playing music, he joins your voice channel to play music. Only one channel can be used at a time.</p>
 !playlist | (none) | Shows all songs currently in the server's queue.
+!roll | <p>(optional)</p><p>max range</p><p># of dice</p> | Rolls a number between 1-100 by default. If a number X is given, the roll will be up to and including that number (1 - X). Number of dice can also be specified as a second parameter.

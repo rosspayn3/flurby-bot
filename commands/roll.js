@@ -8,7 +8,7 @@ module.exports = {
     arguments: "<top range> <number of dice>",
     guildOnly: false,
     name: "roll",
-    description: "Rolls a number between 1-100 by default. If a number X is given, the roll will be up to and including that number (1-X). Number of dice can also be specified as a second parameter.",
+    description: "Rolls a number between 1-100 by default. If a number X is given, the roll will be up to and including that number (1 - X). Number of dice can also be specified as a second parameter.",
 
     async execute(message, args) {
 
